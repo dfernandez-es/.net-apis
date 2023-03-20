@@ -54,17 +54,33 @@ namespace webapiautores.Controllers
             }
             
             var libro = Mapper.Map<Libro>(libroCreacionDTO);
-
-            if(libro.AutoresLibros != null){
-                for(int i = 0; i < libro.AutoresLibros.Count; i++){
-                    libro.AutoresLibros[i].Orden = i;
-                }
-            }
+            AsignarOrdenAutores(libro);
 
             context.Add(libro);
             await context.SaveChangesAsync();
             var libroDTO = Mapper.Map<LibroDTO>(libro);
             return CreatedAtRoute("ObtenerLibro",new {id=libro.Id},libroDTO);
+        }
+
+        [HttpPut("{id:int}")]
+        public async Task<ActionResult> Put(int id, LibroCreacionDTO libroCreacionDTO){
+            var libroDB = await context.Libros.Include(x=>x.AutoresLibros).FirstOrDefaultAsync(x=>x.Id == id);
+            if(libroDB == null){
+                return NotFound();
+            }
+
+            libroDB = Mapper.Map(libroCreacionDTO,libroDB);
+            AsignarOrdenAutores(libroDB);
+            await context.SaveChangesAsync();
+            return NoContent();
+        }
+
+        private void AsignarOrdenAutores(Libro libro){
+                if(libro.AutoresLibros != null){
+                for(int i = 0; i < libro.AutoresLibros.Count; i++){
+                    libro.AutoresLibros[i].Orden = i;
+                }
+            }
         }
     }
 }
